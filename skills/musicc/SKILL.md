@@ -141,14 +141,21 @@ as audible music.
 
 ## System volume (Windows master)
 
-When the user means the **computer's** volume, not mpv's, simulate media keys
-(each press is ±2 of 100):
+What the user hears is **Windows master volume × mpv volume** — a 7% master makes mpv's 75
+inaudible. When the user means the computer's volume, or complains they can't hear despite
+mpv's volume being fine, use the bundled helper (precise, verifiable):
+
+```powershell
+& "$mu\master-volume.ps1"            # print current % and mute state
+& "$mu\master-volume.ps1" -Set 40    # set master volume to 40%
+& "$mu\master-volume.ps1" -Unmute    # or -Mute
+```
+
+Fallback without the helper: simulate media keys (each press is ±2 of 100):
 
 ```powershell
 $sh = New-Object -ComObject WScript.Shell
-1..10 | ForEach-Object { $sh.SendKeys([char]175) }   # system volume up (+20)
-1..10 | ForEach-Object { $sh.SendKeys([char]174) }   # system volume down (-20)
-$sh.SendKeys([char]173)                              # system mute toggle
+1..10 | ForEach-Object { $sh.SendKeys([char]175) }   # up +20  ([char]174 down, [char]173 mute toggle)
 ```
 
 ## Stopping
@@ -160,6 +167,10 @@ Stop-Process -Name mpv -ErrorAction SilentlyContinue -Confirm:$false   # if the 
 
 ## Troubleshooting
 
+- **Playback advances but the user hears nothing (or barely)** → check the Windows master
+  volume and mute first (`& "$mu\master-volume.ps1"`), then the default output device
+  (headphones unplugged? audio routed to an HDMI monitor?). Don't keep raising mpv's volume
+  past 100 — fix the master instead.
 - **Pipe not found** → mpv died (or never started). Check `Get-Process mpv`, restart playback.
 - **"Only images are available" / "n challenge solving failed"** → Node missing or
   `--js-runtimes node` not passed. Fix and retry.
