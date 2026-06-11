@@ -26,6 +26,9 @@ conversation with Claude getting work done — claudoremi just adds the soundtra
 - **YouTube search** — "play deep house", "play Bohemian Rhapsody" → streams the audio instantly
 - **Your YouTube account** — lists and plays your own playlists (including private ones) by
   borrowing cookies from your already-logged-in browser. Zero API setup.
+- **Spotify** — already a Spotify person? Control your open Spotify app by voice
+  ("pause Spotify", "next on Spotify", "what's on Spotify") and open searches in it —
+  no Web API, no client ID, no Premium requirement.
 - **Local files** — plays your `~/Music` folder or any file/folder you name
 - **State-aware volume** — claudoremi reads the *actual* Windows master + player volume before
   every change (you turn knobs by hand too), so "set volume to 80" always lands where you expect
@@ -132,10 +135,17 @@ pwsh -File tests/mpv-ipc.test.ps1   # IPC client against an emulated pipe server
 
 Tests run on every push via GitHub Actions (`windows-latest`) — no audio device or network needed.
 
+## Contributing
+
+PRs welcome — and encouraged. **Found a bug? Open an issue or send a PR and we'll review and
+merge it.** New engines (Spotify Web API, SoundCloud…), macOS/Linux ports, queue management —
+all fair game. See [CONTRIBUTING.md](CONTRIBUTING.md) for the (short) ground rules and how to
+run the tests. The core stays free of required API keys and paid accounts.
+
 ## Roadmap
 
-- **Spotify** — play from a running Spotify app, or via the Web API with a key you set locally
-  on your own machine (no shared secrets). For Premium users this means full library + playlists.
+- **Spotify Web API engine** — play an exact track/playlist by name using *your own* client ID
+  set locally (no shared secrets); full library for Premium users. (Desktop-app control already ships.)
 - macOS/Linux support (Unix socket IPC)
 - Queue management ("add X to the queue"), crossfade… and one day, a proper DJ mode 🎚️
 

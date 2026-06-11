@@ -46,7 +46,9 @@ When calling yt-dlp from the CLI, **always** pass `--js-runtimes node` (and `--c
 - **"skip" / "next"** → next track
 - **"what's playing" / status questions** → `& "$mu\status.ps1"` (title, position, both volumes in one call)
 - **local file/folder name** → play from the local music folder (`$env:USERPROFILE\Music` by default), shuffled
-- **anything else** → treat as a YouTube search
+- **anything mentioning Spotify** ("play X on Spotify", "pause Spotify", "what's on Spotify") →
+  use the Spotify engine (see Spotify section), not mpv
+- **anything else** → treat as a YouTube search (the default engine)
 
 ## The user's YouTube account (optional)
 
@@ -83,6 +85,7 @@ Shared mpv arguments (add to every play command):
 ```powershell
 $mpvArgs = @('--no-video','--volume=55','--force-window=no',
   '--input-ipc-server=\\.\pipe\mpv-claude',
+  '--input-media-keys=no',
   "--script-opts=ytdl_hook-ytdl_path=$mu\yt-dlp.exe",
   "--ytdl-raw-options=cookies=$mu\yt-cookies.txt,js-runtimes=node",
   '--ytdl-format=bestaudio',
@@ -194,6 +197,31 @@ Stop-Process -Name mpv -ErrorAction SilentlyContinue -Confirm:$false   # if the 
 - **Private playlist asks to sign in** → stale cookies; re-run `node "$mu\get-yt-cookies.mjs"`.
 - **Two mpv processes** → kill all (`Stop-Process -Name mpv -Force`) and start one cleanly.
 - **winget missing** → download mpv from https://mpv.io/installation/ and yt-dlp from GitHub releases manually.
+
+## Spotify (no API key, no Premium needed)
+
+For users who'd rather listen on Spotify. `spotify.ps1` reads "now playing" from Spotify's
+window title and drives playback with global media keys — it controls the Spotify desktop app
+the user already has open. No Web API, no client ID, no Premium requirement.
+
+```powershell
+& "$mu\spotify.ps1"                       # status / now playing
+& "$mu\spotify.ps1" -Control playpause    # playpause | next | previous | stop
+& "$mu\spotify.ps1" -Open "miles davis"   # open Spotify to a search (then press play / -Control playpause)
+& "$mu\spotify.ps1" -Uri spotify:track:.. # launch a specific track/playlist URI or link
+```
+
+Routing:
+- **"play X on Spotify"** → `-Open "X"`, then after ~2 s `-Control playpause` to start it; read
+  status back and report the actual title.
+- **"pause / resume / next / previous on Spotify"** → `-Control playpause|next|previous`.
+- **"what's playing on Spotify"** → run with no args.
+- If `spotify.ps1` reports **not installed**, tell the user and offer the YouTube engine instead.
+- Spotify search-by-name that resolves to an exact track needs the user to start it; the Web API
+  path (user's own local client ID) is a roadmap item, not implemented yet.
+
+Note: our mpv launches with `--input-media-keys=no` so it never steals the hardware media keys
+that drive Spotify. The two engines coexist — but tell the user if both are playing at once.
 
 ## Notes
 

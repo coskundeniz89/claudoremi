@@ -17,3 +17,5 @@ jobs:
         run: node --test tests/cookies.test.mjs
       - name: PowerShell IPC tests (emulated pipe server)
         run: pwsh -File tests/mpv-ipc.test.ps1
+      - name: Spotify smoke tests
+        run: pwsh -File tests/spotify.test.ps1

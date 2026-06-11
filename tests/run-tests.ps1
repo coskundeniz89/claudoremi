@@ -10,6 +10,10 @@ try {
     & (Join-Path $PSScriptRoot 'mpv-ipc.test.ps1')
     if ($LASTEXITCODE -ne 0) { throw 'PowerShell IPC tests failed' }
 
+    Write-Host "`n=== Spotify smoke tests ==="
+    & (Join-Path $PSScriptRoot 'spotify.test.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'Spotify tests failed' }
+
     Write-Host "`nAll tests passed."
 } finally {
     Pop-Location
