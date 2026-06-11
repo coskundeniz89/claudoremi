@@ -1,0 +1,5 @@
+# Personal/runtime artifacts - never commit these
+yt-cookies.txt
+yt-dlp.exe
+*.log
+node_modules/
