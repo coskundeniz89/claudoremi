@@ -1,0 +1,12 @@
+# Normalize line endings across platforms so the repo stays consistent.
+* text=auto eol=lf
+
+# Windows-only scripts are fine as LF for git; PowerShell handles either.
+*.ps1 text eol=lf
+*.mjs text eol=lf
+*.md  text eol=lf
+*.json text eol=lf
+
+# Never treat these as text / never ship them (defense in depth alongside .gitignore).
+*.exe binary
+yt-cookies.txt binary
