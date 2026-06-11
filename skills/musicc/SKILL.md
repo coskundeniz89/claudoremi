@@ -41,10 +41,10 @@ When calling yt-dlp from the CLI, **always** pass `--js-runtimes node` (and `--c
 - **"stop" / "quit the music"** → quit mpv
 - **"pause" / "resume"** → pause toggle
 - **"mute" / "unmute"** → mute toggle (music keeps running, just silent)
-- **"volume up/down"** → volume ±10; **"set volume to 80"** → absolute value
-- **"system volume..." / "computer volume..."** → Windows master volume, not mpv (see System volume)
+- **any volume request** → state-aware: read the current state first, then decide which knob
+  to turn (see Volume policy)
 - **"skip" / "next"** → next track
-- **"what's playing"** → query media-title
+- **"what's playing" / status questions** → `& "$mu\status.ps1"` (title, position, both volumes in one call)
 - **local file/folder name** → play from the local music folder (`$env:USERPROFILE\Music` by default), shuffled
 - **anything else** → treat as a YouTube search
 
@@ -85,7 +85,8 @@ $mpvArgs = @('--no-video','--volume=55','--force-window=no',
   '--input-ipc-server=\\.\pipe\mpv-claude',
   "--script-opts=ytdl_hook-ytdl_path=$mu\yt-dlp.exe",
   "--ytdl-raw-options=cookies=$mu\yt-cookies.txt,js-runtimes=node",
-  '--ytdl-format=bestaudio')
+  '--ytdl-format=bestaudio',
+  "--log-file=$mu\mpv.log")
 ```
 
 (If `yt-cookies.txt` doesn't exist, drop the `cookies=` part of `--ytdl-raw-options`.)
@@ -138,6 +139,22 @@ as audible music.
 & "$mu\mpv-ipc.ps1" -Json '{"command":["get_property","mute"],"request_id":3}' -Read            # mute state
 & "$mu\mpv-ipc.ps1" -Json '{"command":["get_property","playback-time"],"request_id":4}' -Read   # position (for verification)
 ```
+
+## Volume policy — always state-aware
+
+The user changes volume by hand too (media keys, the mixer, headphone dials). Whatever you
+set last time may no longer be true. For **every** volume request:
+
+1. **Read fresh state first:** `& "$mu\status.ps1"` — gives master %, mpv %, both mute flags.
+2. What the user hears ≈ **master% × mpv%**. Decide which knob to turn:
+   - master muted or < 20% → fix master first; it's the bottleneck
+   - master reasonable (≥ ~30%) → prefer adjusting mpv, so other apps' audio is untouched
+   - mpv already at 100 and the user wants louder → raise master (or boost mpv up to 130 as a last resort)
+3. **"louder" / "quieter"** → a clearly noticeable step (≈ ±10–15 effective points), not a token nudge.
+4. **"set volume to X"** → set mpv to X; if master is outside a sane band (~30–70%), bring it
+   into the band too, and say so.
+5. Read back after changing and tell the user both values — including what you *found*, e.g.
+   "master was down to 12% (hand-adjusted?), brought it to 40%, mpv stays at 75."
 
 ## System volume (Windows master)
 
